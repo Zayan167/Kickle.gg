@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'ui-monospace', monospace;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #080b0f;
+  color: #f1f5f9;
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #0e1218;
+}
+::-webkit-scrollbar-thumb {
+  background: #1a2030;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00d97e;
+}
+
+/* Tile flip animation */
+.tile-flip {
+  animation: tileFlip 0.5s ease forwards;
+  backface-visibility: hidden;
+}
+
+@keyframes tileFlip {
+  0%   { transform: rotateX(0); }
+  50%  { transform: rotateX(-90deg); opacity: 0.3; }
+  100% { transform: rotateX(0); }
+}
+
+/* Stagger tile reveals */
+.tile-flip:nth-child(1) { animation-delay: 0ms; }
+.tile-flip:nth-child(2) { animation-delay: 100ms; }
+.tile-flip:nth-child(3) { animation-delay: 200ms; }
+.tile-flip:nth-child(4) { animation-delay: 300ms; }
+.tile-flip:nth-child(5) { animation-delay: 400ms; }
+.tile-flip:nth-child(6) { animation-delay: 500ms; }
+.tile-flip:nth-child(7) { animation-delay: 600ms; }
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid #00d97e;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Brand glow on hover */
+.glow-on-hover:hover {
+  box-shadow: 0 0 24px rgba(0, 217, 126, 0.25);
+}
+
+/* Noise overlay */
+.noise::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand text-bg-primary font-semibold px-6 py-3 rounded-xl
+           transition-all duration-200 hover:bg-brand-dim active:scale-95
+           font-display tracking-wide uppercase text-sm;
+  }
+  .btn-ghost {
+    @apply border border-border-bright text-slate-300 font-semibold px-6 py-3 rounded-xl
+           transition-all duration-200 hover:bg-bg-hover hover:text-white active:scale-95
+           font-display tracking-wide uppercase text-sm;
+  }
+  .card {
+    @apply bg-bg-card border border-border rounded-2xl;
+  }
+  .input-field {
+    @apply w-full bg-bg-tertiary border border-border text-white placeholder-slate-500
+           rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200
+           focus:border-brand focus:ring-1 focus:ring-brand/30;
+  }
+}

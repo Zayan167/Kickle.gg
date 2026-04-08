@@ -1,0 +1,13 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "devCommand": "next dev",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@kickle-supabase-url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@kickle-supabase-anon-key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@kickle-service-role-key",
+    "NEXT_PUBLIC_APP_URL": "@kickle-app-url"
+  }
+}
