@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kickle – Daily Soccer Player Guessing Game</title>
+<meta name="description" content="Guess the mystery soccer player in 8 tries. New puzzle every day featuring players from the 2025/26 Premier League, La Liga, Bundesliga, Serie A and Ligue 1.">
+<meta property="og:title" content="Kickle – Daily Soccer Puzzle">
+<meta property="og:description" content="Can you guess today's mystery soccer player? New challenge every day!">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="##0b1120">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET & TOKENS ─────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:        #0b1120;
+  --surface:   #111827;
+  --surface2:  #1a2535;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.13);
+  --green:     #22c55e;
+  --green-dim: #15803d;
+  --green-bg:  rgba(34,197,94,0.12);
+  --amber:     #f59e0b;
+  --amber-bg:  rgba(245,158,11,0.12);
+  --red:       #ef4444;
+  --red-bg:    rgba(239,68,68,0.12);
+  --text:      #f1f5f9;
+  --muted:     #94a3b8;
+  --faint:     #475569;
+  --accent:    #22c55e;
+  --font-head: 'Bebas Neue', 'Impact', sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --r:         10px;
+  --r-lg:      16px;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ─── PITCH TEXTURE BACKGROUND ──────────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(34,197,94,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,197,94,0.025) 1px, transparent 1px);
+  background-size:60px 60px;
+  pointer-events:none;
+  z-index:0;
+}
+body::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(34,197,94,0.08) 0%, transparent 70%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ─── LAYOUT ─────────────────────────────────────────────────── */
+.page{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 1rem 4rem}
+
+/* ─── HEADER ─────────────────────────────────────────────────── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.25rem 0;
+  border-bottom:1px solid var(--border);
+  margin-bottom:1.5rem;
+  gap:1rem;
+}
+.logo{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.logo-ball{
+  width:46px;height:46px;border-radius:50%;
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  box-shadow:0 0 20px rgba(34,197,94,0.3);
+  flex-shrink:0;
+}
+.logo-name{font-family:var(--font-head);font-size:34px;letter-spacing:2px;color:#fff;line-height:1}
+.logo-tag{font-size:10px;color:var(--green);letter-spacing:3px;text-transform:uppercase;margin-top:1px}
+.header-actions{display:flex;gap:8px;align-items:center}
+.pill{
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--muted);font-size:12px;padding:6px 12px;border-radius:20px;
+  font-weight:600;letter-spacing:0.3px;white-space:nowrap;
+}
+.pill.green{background:var(--green-bg);border-color:rgba(34,197,94,0.3);color:var(--green)}
+.icon-btn{
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--muted);width:36px;height:36px;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:16px;transition:all .2s;flex-shrink:0;
+}
+.icon-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* ─── COUNTDOWN STRIP ───────────────────────────────────────── */
+#countdown-strip{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+  padding:10px 16px;margin-bottom:1.25rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  flex-wrap:wrap;
+}
+.countdown-label{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:1px}
+#countdown-time{font-family:var(--font-head);font-size:22px;color:var(--green);letter-spacing:2px}
+.puzzle-num{font-size:12px;color:var(--faint)}
+.puzzle-num span{color:var(--muted);font-weight:600}
+
+/* ─── SEARCH ────────────────────────────────────────────────── */
+.search-wrap{position:relative;margin-bottom:1rem}
+.search-input{
+  width:100%;
+  background:var(--surface);
+  border:1.5px solid var(--border2);
+  color:var(--text);
+  padding:15px 52px 15px 18px;
+  border-radius:var(--r-lg);
+  font-size:16px;
+  font-family:var(--font-body);
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.search-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+.search-input::placeholder{color:var(--faint)}
+.search-input:disabled{opacity:.4;cursor:not-allowed}
+.search-btn{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:var(--green);border:none;color:#000;
+  width:34px;height:34px;border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  transition:background .2s;
+}
+.search-btn:hover{background:#16a34a}
+
+/* ─── DROPDOWN ──────────────────────────────────────────────── */
+.dropdown{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;
+  background:var(--surface);border:1.5px solid var(--border2);
+  border-radius:var(--r-lg);z-index:200;
+  max-height:300px;overflow-y:auto;
+  box-shadow:0 24px 48px rgba(0,0,0,.6);
+  display:none;
+}
+.dropdown::-webkit-scrollbar{width:4px}
+.dropdown::-webkit-scrollbar-track{background:transparent}
+.dropdown::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.di{
+  padding:11px 16px;cursor:pointer;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--border);transition:background .15s;
+}
+.di:last-child{border-bottom:none}
+.di:hover,.di.active{background:rgba(34,197,94,.07)}
+.di-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--surface2);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;
+}
+.di-body{flex:1;min-width:0}
+.di-name{font-weight:600;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.di-meta{font-size:12px;color:var(--faint);margin-top:1px}
+.di-flag{font-size:20px;flex-shrink:0}
+
+/* ─── STATUS ROW ────────────────────────────────────────────── */
+.status-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1rem;padding:10px 14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  gap:1rem;flex-wrap:wrap;
+}
+.guesses-label{font-size:13px;color:var(--muted)}
+.guesses-label strong{color:var(--text);font-size:15px}
+.dots{display:flex;gap:5px}
+.dot{
+  width:13px;height:13px;border-radius:50%;
+  background:var(--surface2);border:1px solid var(--border2);
+  transition:background .3s,border-color .3s;
+}
+.dot.used{background:var(--red);border-color:var(--red)}
+.dot.win{background:var(--green);border-color:var(--green)}
+
+/* ─── COL HEADERS ───────────────────────────────────────────── */
+.grid-head{
+  display:grid;
+  grid-template-columns:2fr 1.1fr 1fr 1fr 1fr 0.8fr 0.8fr;
+  gap:5px;margin-bottom:5px;padding:0 2px;
+}
+.gh{
+  font-size:10px;font-weight:700;color:var(--faint);
+  text-transform:uppercase;letter-spacing:1px;text-align:center;
+  padding:2px 0;
+}
+.gh:first-child{text-align:left;padding-left:10px}
+
+/* ─── GUESS ROWS ────────────────────────────────────────────── */
+.guess-list{display:flex;flex-direction:column;gap:5px;margin-bottom:1.25rem}
+.guess-row{
+  display:grid;
+  grid-template-columns:2fr 1.1fr 1fr 1fr 1fr 0.8fr 0.8fr;
+  gap:5px;
+  animation:rowIn .35s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes rowIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+.gc{
+  border-radius:var(--r);padding:9px 6px;
+  text-align:center;font-size:12px;font-weight:700;
+  min-height:54px;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:2px;position:relative;
+  transition:background .3s;letter-spacing:0.2px;
+}
+.gc:first-child{
+  text-align:left;justify-content:flex-start;align-items:center;
+  flex-direction:row;gap:7px;padding:9px 10px;font-size:12px;
+}
+.gc-flag{font-size:17px;flex-shrink:0}
+.gc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px}
+
+.gc.correct{background:#15803d;color:#fff}
+.gc.close{background:#92400e;color:#fde68a}
+.gc.wrong{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+.gc .arrow{font-size:9px;color:rgba(255,255,255,0.6);margin-top:1px}
+
+/* ─── EMPTY STATE ───────────────────────────────────────────── */
+.empty{
+  text-align:center;padding:2.5rem 1rem 1rem;
+  animation:fadeIn .4s ease both;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.empty-icon{font-size:52px;display:block;margin-bottom:1rem;filter:grayscale(20%)}
+.empty-hint{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:4px;
+  max-width:500px;margin:1.5rem auto 0;
+}
+.eh-head{font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.8px;text-align:center;padding-bottom:4px}
+.eh-cell{
+  height:38px;border-radius:6px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--faint);
+}
+.eh-cell.g{background:#15803d;color:#fff;border-color:#15803d}
+.eh-cell.y{background:#92400e;color:#fde68a;border-color:#92400e}
+
+/* ─── RESULT CARD ───────────────────────────────────────────── */
+.result-wrap{margin:0.5rem 0 1rem}
+.result-card{
+  background:var(--surface);border:2px solid var(--green);
+  border-radius:var(--r-lg);padding:2rem 1.5rem;text-align:center;
+  animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+.result-card.loss{border-color:var(--red)}
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.result-emoji{font-size:52px;margin-bottom:.5rem;display:block}
+.result-title{font-family:var(--font-head);font-size:32px;letter-spacing:2px;margin-bottom:.25rem}
+.result-title.win{color:var(--green)}
+.result-title.loss{color:var(--red)}
+.result-sub{font-size:14px;color:var(--muted);margin-bottom:1.25rem}
+.result-player{font-family:var(--font-head);font-size:30px;color:var(--green);letter-spacing:2px;margin-bottom:.3rem}
+.result-meta{font-size:13px;color:var(--faint);margin-bottom:1.5rem;line-height:1.6}
+.result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-share{
+  background:var(--green);color:#000;border:none;
+  padding:12px 24px;border-radius:var(--r);font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .2s;font-family:var(--font-body);
+  display:flex;align-items:center;gap:7px;
+}
+.btn-share:hover{background:#16a34a;transform:scale(1.03)}
+.btn-stats{
+  background:var(--surface2);color:var(--muted);
+  border:1px solid var(--border2);padding:12px 20px;border-radius:var(--r);
+  font-size:14px;cursor:pointer;transition:all .2s;font-family:var(--font-body);
+  display:flex;align-items:center;gap:7px;
+}
+.btn-stats:hover{border-color:var(--green);color:var(--green)}
+
+/* Share grid preview */
+.share-preview{
+  display:inline-grid;gap:3px;margin:1rem auto;
+  background:var(--surface2);padding:12px;border-radius:10px;
+}
+.sp-row{display:flex;gap:3px}
+.sp-cell{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px}
+.sp-cell.g{background:#15803d}
+.sp-cell.y{background:#92400e}
+.sp-cell.x{background:var(--surface);border:1px solid var(--border)}
+
+/* ─── MODAL ─────────────────────────────────────────────────── */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);
+  z-index:500;display:none;align-items:center;justify-content:center;padding:1rem;
+  backdrop-filter:blur(4px);
+}
+.overlay.open{display:flex;animation:fadeIn .2s ease}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r-lg);padding:2rem;max-width:460px;width:100%;
+  max-height:90vh;overflow-y:auto;position:relative;
+}
+.modal-close{
+  position:absolute;top:14px;right:14px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--muted);width:30px;height:30px;border-radius:6px;
+  cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;
+}
+.modal-close:hover{color:var(--text)}
+.modal h2{font-family:var(--font-head);font-size:26px;letter-spacing:2px;margin-bottom:1rem}
+.modal p{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:.75rem}
+.modal strong{color:var(--text)}
+
+/* Legend */
+.legend{display:flex;flex-direction:column;gap:9px;margin:1rem 0 1.5rem}
+.li{display:flex;align-items:center;gap:12px}
+.li-box{
+  width:38px;height:38px;border-radius:var(--r);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.li-text{font-size:13px;color:var(--muted)}
+.li-text strong{color:var(--text)}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:1.5rem}
+.stat-box{
+  background:var(--surface2);border-radius:var(--r);
+  padding:14px 8px;text-align:center;
+}
+.stat-n{font-family:var(--font-head);font-size:30px;color:var(--green);letter-spacing:1px}
+.stat-l{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+/* Guess dist */
+.dist{display:flex;flex-direction:column;gap:5px;margin-top:1rem}
+.dist-row{display:flex;align-items:center;gap:8px}
+.dist-num{font-size:12px;font-weight:700;color:var(--faint);width:12px;text-align:right}
+.dist-bar-wrap{flex:1;height:20px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.dist-bar{height:100%;background:var(--green-dim);border-radius:4px;min-width:0;transition:width 1s ease .3s;display:flex;align-items:center;padding-left:6px}
+.dist-bar span{font-size:11px;font-weight:700;color:#fff}
+
+/* ─── TOAST ─────────────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--green);color:#000;
+  padding:11px 22px;border-radius:8px;font-weight:700;font-size:14px;
+  z-index:9999;opacity:0;
+  transition:transform .3s cubic-bezier(.22,1,.36,1),opacity .3s;
+  white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ─── CONFETTI ───────────────────────────────────────────────── */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:998;overflow:hidden}
+.cp{position:absolute;top:-20px;border-radius:2px;animation:cf linear forwards}
+@keyframes cf{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* ─── FOOTER ─────────────────────────────────────────────────── */
+footer{
+  text-align:center;padding:2rem 0;
+  border-top:1px solid var(--border);margin-top:2rem;
+}
+footer p{font-size:12px;color:var(--faint)}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--green)}
+
+/* ─── AD SLOTS ──────────────────────────────────────────────── */
+.ad-slot{
+  background:var(--surface);border:1px dashed var(--border2);
+  border-radius:var(--r);text-align:center;color:var(--faint);
+  font-size:11px;letter-spacing:1px;text-transform:uppercase;
+  padding:18px;margin:1rem 0;display:flex;align-items:center;justify-content:center;
+}
+.ad-banner{min-height:90px}
+.ad-rect{min-height:250px}
+
+/* ─── RESPONSIVE ────────────────────────────────────────────── */
+@media(max-width:600px){
+  .grid-head{grid-template-columns:1.6fr 1fr 0.8fr 0.8fr 0.8fr 0.7fr 0.7fr;gap:3px}
+  .guess-row{grid-template-columns:1.6fr 1fr 0.8fr 0.8fr 0.8fr 0.7fr 0.7fr;gap:3px}
+  .gc{font-size:10px;min-height:48px;padding:7px 3px}
+  .gc:first-child{padding:7px 7px;gap:5px}
+  .gc-name{max-width:68px}
+  .gc-flag{font-size:14px}
+  header{flex-wrap:wrap}
+  .logo-name{font-size:28px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .empty-hint{grid-template-columns:repeat(4,1fr)}
+  .gh{font-size:9px}
+}
+</style>
+</head>
+<body>
+<div id="confetti" aria-hidden="true"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- ─── HEADER ──────────────────────────────────────── -->
+<div class="page">
+<header>
+  <div class="logo">
+    <div class="logo-ball" aria-hidden="true">⚽</div>
+    <div>
+      <div class="logo-name">KICKLE</div>
+      <div class="logo-tag">Daily Soccer Puzzle</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="pill green" id="puzzle-badge">Puzzle #1</div>
+    <button class="icon-btn" id="statsBtn" title="Stats" aria-label="View stats">📊</button>
+    <button class="icon-btn" id="helpBtn" title="How to play" aria-label="How to play">?</button>
+  </div>
+</header>
+
+<!-- AD BANNER TOP -->
+<div class="ad-slot ad-banner" id="ad-top">
+  <!-- Replace with: <ins class="adsbygoogle" data-ad-client="ca-pub-XXXXXX" data-ad-slot="XXXXXX" data-ad-format="auto"></ins> -->
+  Advertisement
+</div>
+
+<!-- ─── COUNTDOWN ───────────────────────────────────── -->
+<div id="countdown-strip">
+  <div>
+    <div class="countdown-label">Next puzzle in</div>
+    <div id="countdown-time">00:00:00</div>
+  </div>
+  <div class="puzzle-num" id="puzzle-info">Loading...</div>
+</div>
+
+<!-- ─── SEARCH ──────────────────────────────────────── -->
+<div class="search-wrap">
+  <input type="text" class="search-input" id="searchInput"
+    placeholder="🔍  Search a player name…" autocomplete="off"
+    oninput="handleSearch(this.value)" onkeydown="handleKey(event)" aria-label="Search for a player"/>
+  <button class="search-btn" onclick="submitTop()" aria-label="Submit guess">⏎</button>
+  <div class="dropdown" id="dropdown" role="listbox"></div>
+</div>
+
+<!-- ─── STATUS ──────────────────────────────────────── -->
+<div class="status-row">
+  <div class="guesses-label">Guesses: <strong id="guessUsed">0</strong>/8</div>
+  <div class="dots" id="dots" aria-label="Guess progress"></div>
+</div>
+
+<!-- ─── GRID ────────────────────────────────────────── -->
+<div class="grid-head">
+  <div class="gh">Player</div>
+  <div class="gh">Club</div>
+  <div class="gh">League</div>
+  <div class="gh">Nation</div>
+  <div class="gh">Position</div>
+  <div class="gh">Age</div>
+  <div class="gh">Shirt</div>
+</div>
+<div class="guess-list" id="guessList"></div>
+
+<!-- ─── RESULT ──────────────────────────────────────── -->
+<div class="result-wrap" id="resultWrap" style="display:none"></div>
+
+<!-- AD RECT -->
+<div class="ad-slot ad-rect" id="ad-mid">
+  <!-- Replace with AdSense rectangle unit -->
+  Advertisement
+</div>
+
+<footer>
+  <p>⚽ Kickle — A new soccer puzzle every day at midnight · <a href="#" onclick="toggleHelp()">How to play</a></p>
+  <p style="margin-top:6px">Data reflects 2025/26 season rosters · Not affiliated with any league or club</p>
+</footer>
+</div>
+
+<!-- ─── HOW TO PLAY MODAL ─────────────────────────── -->
+<div class="overlay" id="helpModal" role="dialog" aria-modal="true" aria-label="How to play">
+  <div class="modal">
+    <button class="modal-close" onclick="toggleHelp()" aria-label="Close">×</button>
+    <h2>⚽ HOW TO PLAY</h2>
+    <p>Guess the mystery <strong>professional soccer player</strong> in <strong>8 tries</strong>. A brand new player every day at midnight!</p>
+    <p>After each guess, tiles reveal how close you are:</p>
+    <div class="legend">
+      <div class="li"><div class="li-box correct" style="background:#15803d;color:#fff">✓</div><div class="li-text"><strong>Green</strong> — Perfect match for this attribute.</div></div>
+      <div class="li"><div class="li-box" style="background:#92400e;color:#fde68a">~</div><div class="li-text"><strong>Yellow</strong> — Close! Age/shirt within ±2. Position in same category.</div></div>
+      <div class="li"><div class="li-box wrong" style="background:var(--surface2);color:var(--faint);border:1px solid var(--border2)">✗</div><div class="li-text"><strong>Gray</strong> — No match.</div></div>
+    </div>
+    <p><strong>↑ ↓</strong> arrows on Age and Shirt # tell you whether to guess higher or lower.</p>
+    <p><strong>Position categories:</strong> GK · DEF (CB/LB/RB) · MID (CDM/CM/CAM) · FWD (LW/RW/ST)</p>
+    <p>Players drawn from 2025/26 squads across <strong>Premier League, La Liga, Bundesliga, Serie A and Ligue 1</strong>.</p>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-n" id="s-played">0</div><div class="stat-l">Played</div></div>
+      <div class="stat-box"><div class="stat-n" id="s-won">0</div><div class="stat-l">Won</div></div>
+      <div class="stat-box"><div class="stat-n" id="s-streak">0</div><div class="stat-l">Streak</div></div>
+      <div class="stat-box"><div class="stat-n" id="s-best">0</div><div class="stat-l">Best</div></div>
+    </div>
+    <div style="margin-top:1.5rem">
+      <p style="font-size:12px;color:var(--faint);margin-bottom:.5rem">GUESS DISTRIBUTION</p>
+      <div class="dist" id="distChart"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── STATS MODAL ────────────────────────────────── -->
+<div class="overlay" id="statsModal" role="dialog" aria-modal="true" aria-label="Statistics">
+  <div class="modal">
+    <button class="modal-close" onclick="toggleStats()" aria-label="Close">×</button>
+    <h2>📊 STATISTICS</h2>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-n" id="ss-played">0</div><div class="stat-l">Played</div></div>
+      <div class="stat-box"><div class="stat-n" id="ss-won">0</div><div class="stat-l">Won</div></div>
+      <div class="stat-box"><div class="stat-n" id="ss-streak">0</div><div class="stat-l">Streak</div></div>
+      <div class="stat-box"><div class="stat-n" id="ss-best">0</div><div class="stat-l">Best</div></div>
+    </div>
+    <div style="margin-top:1.5rem">
+      <p style="font-size:12px;color:var(--faint);margin-bottom:.5rem">GUESS DISTRIBUTION</p>
+      <div class="dist" id="distChart2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  KICKLE — Full Game Logic
+//  Self-contained, no dependencies, daily refresh via localStorage key
+// ═══════════════════════════════════════════════════════════════
+
+// ─── PLAYER DATABASE 2025/26 ────────────────────────────────
+const DB = [
+  // PREMIER LEAGUE ─────────────────────────────────────────
+  {n:"Erling Haaland",     club:"Man City",      lg:"PL", nat:"Norway",      pos:"ST",  age:25, shirt:9,   f:"🇳🇴"},
+  {n:"Phil Foden",         club:"Man City",      lg:"PL", nat:"England",     pos:"LW",  age:25, shirt:47,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Jeremy Doku",        club:"Man City",      lg:"PL", nat:"Belgium",     pos:"LW",  age:23, shirt:11,  f:"🇧🇪"},
+  {n:"Rayan Cherki",       club:"Man City",      lg:"PL", nat:"France",      pos:"CAM", age:22, shirt:10,  f:"🇫🇷"},
+  {n:"Rodri",              club:"Man City",      lg:"PL", nat:"Spain",       pos:"CDM", age:29, shirt:16,  f:"🇪🇸"},
+  {n:"Kevin De Bruyne",    club:"Man City",      lg:"PL", nat:"Belgium",     pos:"CM",  age:34, shirt:17,  f:"🇧🇪"},
+  {n:"Josko Gvardiol",     club:"Man City",      lg:"PL", nat:"Croatia",     pos:"LB",  age:23, shirt:24,  f:"🇭🇷"},
+  {n:"Ederson",            club:"Man City",      lg:"PL", nat:"Brazil",      pos:"GK",  age:32, shirt:31,  f:"🇧🇷"},
+  {n:"Bukayo Saka",        club:"Arsenal",       lg:"PL", nat:"England",     pos:"RW",  age:23, shirt:7,   f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Declan Rice",        club:"Arsenal",       lg:"PL", nat:"England",     pos:"CM",  age:26, shirt:41,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Martin Ødegaard",    club:"Arsenal",       lg:"PL", nat:"Norway",      pos:"CAM", age:26, shirt:8,   f:"🇳🇴"},
+  {n:"Gabriel Magalhães",  club:"Arsenal",       lg:"PL", nat:"Brazil",      pos:"CB",  age:27, shirt:6,   f:"🇧🇷"},
+  {n:"William Saliba",     club:"Arsenal",       lg:"PL", nat:"France",      pos:"CB",  age:24, shirt:12,  f:"🇫🇷"},
+  {n:"Kai Havertz",        club:"Arsenal",       lg:"PL", nat:"Germany",     pos:"ST",  age:26, shirt:29,  f:"🇩🇪"},
+  {n:"Viktor Gyökeres",    club:"Arsenal",       lg:"PL", nat:"Sweden",      pos:"ST",  age:27, shirt:9,   f:"🇸🇪"},
+  {n:"David Raya",         club:"Arsenal",       lg:"PL", nat:"Spain",       pos:"GK",  age:30, shirt:22,  f:"🇪🇸"},
+  {n:"Leandro Trossard",   club:"Arsenal",       lg:"PL", nat:"Belgium",     pos:"LW",  age:30, shirt:19,  f:"🇧🇪"},
+  {n:"Mohamed Salah",      club:"Liverpool",     lg:"PL", nat:"Egypt",       pos:"RW",  age:33, shirt:11,  f:"🇪🇬"},
+  {n:"Virgil van Dijk",    club:"Liverpool",     lg:"PL", nat:"Netherlands", pos:"CB",  age:34, shirt:4,   f:"🇳🇱"},
+  {n:"Dominik Szoboszlai", club:"Liverpool",     lg:"PL", nat:"Hungary",     pos:"CM",  age:24, shirt:8,   f:"🇭🇺"},
+  {n:"Luis Díaz",          club:"Liverpool",     lg:"PL", nat:"Colombia",    pos:"LW",  age:28, shirt:7,   f:"🇨🇴"},
+  {n:"Alisson Becker",     club:"Liverpool",     lg:"PL", nat:"Brazil",      pos:"GK",  age:33, shirt:1,   f:"🇧🇷"},
+  {n:"Cody Gakpo",         club:"Liverpool",     lg:"PL", nat:"Netherlands", pos:"LW",  age:26, shirt:18,  f:"🇳🇱"},
+  {n:"Hugo Ekitike",       club:"Liverpool",     lg:"PL", nat:"France",      pos:"ST",  age:23, shirt:9,   f:"🇫🇷"},
+  {n:"Cole Palmer",        club:"Chelsea",       lg:"PL", nat:"England",     pos:"CAM", age:23, shirt:20,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Moisés Caicedo",     club:"Chelsea",       lg:"PL", nat:"Ecuador",     pos:"CDM", age:24, shirt:25,  f:"🇪🇨"},
+  {n:"Marc Cucurella",     club:"Chelsea",       lg:"PL", nat:"Spain",       pos:"LB",  age:27, shirt:32,  f:"🇪🇸"},
+  {n:"Reece James",        club:"Chelsea",       lg:"PL", nat:"England",     pos:"RB",  age:26, shirt:24,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Enzo Fernández",     club:"Chelsea",       lg:"PL", nat:"Argentina",   pos:"CM",  age:24, shirt:8,   f:"🇦🇷"},
+  {n:"Bruno Fernandes",    club:"Man United",    lg:"PL", nat:"Portugal",    pos:"CAM", age:30, shirt:8,   f:"🇵🇹"},
+  {n:"Bryan Mbeumo",       club:"Man United",    lg:"PL", nat:"Cameroon",    pos:"RW",  age:25, shirt:19,  f:"🇨🇲"},
+  {n:"Rasmus Højlund",     club:"Man United",    lg:"PL", nat:"Denmark",     pos:"ST",  age:22, shirt:11,  f:"🇩🇰"},
+  {n:"Marcus Rashford",    club:"Aston Villa",   lg:"PL", nat:"England",     pos:"LW",  age:27, shirt:11,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Ollie Watkins",      club:"Aston Villa",   lg:"PL", nat:"England",     pos:"ST",  age:30, shirt:11,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Emiliano Martínez",  club:"Aston Villa",   lg:"PL", nat:"Argentina",   pos:"GK",  age:33, shirt:1,   f:"🇦🇷"},
+  {n:"Morgan Rogers",      club:"Aston Villa",   lg:"PL", nat:"England",     pos:"CAM", age:22, shirt:10,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Youri Tielemans",    club:"Aston Villa",   lg:"PL", nat:"Belgium",     pos:"CM",  age:28, shirt:8,   f:"🇧🇪"},
+  {n:"Son Heung-min",      club:"Tottenham",     lg:"PL", nat:"South Korea", pos:"LW",  age:33, shirt:7,   f:"🇰🇷"},
+  {n:"James Maddison",     club:"Tottenham",     lg:"PL", nat:"England",     pos:"CAM", age:28, shirt:10,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Brennan Johnson",    club:"Tottenham",     lg:"PL", nat:"Wales",       pos:"RW",  age:24, shirt:22,  f:"🏴󠁧󠁢󠁷󠁬󠁳󠁿"},
+  {n:"Dominic Solanke",    club:"Tottenham",     lg:"PL", nat:"England",     pos:"ST",  age:28, shirt:19,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Alexander Isak",     club:"Newcastle",     lg:"PL", nat:"Sweden",      pos:"ST",  age:26, shirt:14,  f:"🇸🇪"},
+  {n:"Anthony Gordon",     club:"Newcastle",     lg:"PL", nat:"England",     pos:"LW",  age:24, shirt:10,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Bruno Guimarães",    club:"Newcastle",     lg:"PL", nat:"Brazil",      pos:"CDM", age:27, shirt:39,  f:"🇧🇷"},
+  {n:"Antoine Semenyo",    club:"Bournemouth",   lg:"PL", nat:"Ghana",       pos:"RW",  age:25, shirt:10,  f:"🇬🇭"},
+  {n:"Evanilson",          club:"Bournemouth",   lg:"PL", nat:"Brazil",      pos:"ST",  age:26, shirt:9,   f:"🇧🇷"},
+  {n:"Igor Thiago",        club:"Brentford",     lg:"PL", nat:"Brazil",      pos:"ST",  age:23, shirt:19,  f:"🇧🇷"},
+  {n:"Iliman Ndiaye",      club:"Everton",       lg:"PL", nat:"Senegal",     pos:"LW",  age:25, shirt:10,  f:"🇸🇳"},
+  {n:"Joao Pedro",         club:"Brighton",      lg:"PL", nat:"Brazil",      pos:"ST",  age:23, shirt:9,   f:"🇧🇷"},
+  {n:"Kaoru Mitoma",       club:"Brighton",      lg:"PL", nat:"Japan",       pos:"LW",  age:28, shirt:22,  f:"🇯🇵"},
+  {n:"Granit Xhaka",       club:"Sunderland",    lg:"PL", nat:"Switzerland", pos:"CDM", age:33, shirt:34,  f:"🇨🇭"},
+  {n:"Antonee Robinson",   club:"Fulham",        lg:"PL", nat:"USA",         pos:"LB",  age:28, shirt:33,  f:"🇺🇸"},
+  {n:"Raúl Jiménez",       club:"Fulham",        lg:"PL", nat:"Mexico",      pos:"ST",  age:34, shirt:9,   f:"🇲🇽"},
+  {n:"Brenden Aaronson",   club:"Leeds",         lg:"PL", nat:"USA",         pos:"CAM", age:25, shirt:11,  f:"🇺🇸"},
+  {n:"Pedro",              club:"Leeds",         lg:"PL", nat:"Brazil",      pos:"ST",  age:28, shirt:9,   f:"🇧🇷"},
+  {n:"Noni Madueke",       club:"Chelsea",       lg:"PL", nat:"England",     pos:"RW",  age:23, shirt:11,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Trent Alexander-Arnold",club:"Real Madrid",lg:"LL", nat:"England",     pos:"CM",  age:26, shirt:12,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+
+  // LA LIGA ────────────────────────────────────────────────
+  {n:"Vinícius Jr.",       club:"Real Madrid",   lg:"LL", nat:"Brazil",      pos:"LW",  age:25, shirt:7,   f:"🇧🇷"},
+  {n:"Kylian Mbappé",      club:"Real Madrid",   lg:"LL", nat:"France",      pos:"ST",  age:26, shirt:9,   f:"🇫🇷"},
+  {n:"Jude Bellingham",    club:"Real Madrid",   lg:"LL", nat:"England",     pos:"CAM", age:22, shirt:5,   f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Federico Valverde",  club:"Real Madrid",   lg:"LL", nat:"Uruguay",     pos:"CM",  age:27, shirt:15,  f:"🇺🇾"},
+  {n:"Rodrygo",            club:"Real Madrid",   lg:"LL", nat:"Brazil",      pos:"RW",  age:25, shirt:11,  f:"🇧🇷"},
+  {n:"Éder Militão",       club:"Real Madrid",   lg:"LL", nat:"Brazil",      pos:"CB",  age:28, shirt:3,   f:"🇧🇷"},
+  {n:"Thibaut Courtois",   club:"Real Madrid",   lg:"LL", nat:"Belgium",     pos:"GK",  age:33, shirt:1,   f:"🇧🇪"},
+  {n:"Lamine Yamal",       club:"Barcelona",     lg:"LL", nat:"Spain",       pos:"RW",  age:18, shirt:19,  f:"🇪🇸"},
+  {n:"Robert Lewandowski", club:"Barcelona",     lg:"LL", nat:"Poland",      pos:"ST",  age:37, shirt:9,   f:"🇵🇱"},
+  {n:"Pedri",              club:"Barcelona",     lg:"LL", nat:"Spain",       pos:"CM",  age:23, shirt:8,   f:"🇪🇸"},
+  {n:"Gavi",               club:"Barcelona",     lg:"LL", nat:"Spain",       pos:"CM",  age:21, shirt:6,   f:"🇪🇸"},
+  {n:"Raphinha",           club:"Barcelona",     lg:"LL", nat:"Brazil",      pos:"RW",  age:28, shirt:11,  f:"🇧🇷"},
+  {n:"Dani Olmo",          club:"Barcelona",     lg:"LL", nat:"Spain",       pos:"CAM", age:27, shirt:20,  f:"🇪🇸"},
+  {n:"Alejandro Balde",    club:"Barcelona",     lg:"LL", nat:"Spain",       pos:"LB",  age:22, shirt:3,   f:"🇪🇸"},
+  {n:"Marc-André ter Stegen",club:"Barcelona",   lg:"LL", nat:"Germany",     pos:"GK",  age:33, shirt:1,   f:"🇩🇪"},
+  {n:"Pau Cubarsí",        club:"Barcelona",     lg:"LL", nat:"Spain",       pos:"CB",  age:18, shirt:33,  f:"🇪🇸"},
+  {n:"Antoine Griezmann",  club:"Atlético",      lg:"LL", nat:"France",      pos:"ST",  age:34, shirt:7,   f:"🇫🇷"},
+  {n:"Jan Oblak",          club:"Atlético",      lg:"LL", nat:"Slovenia",    pos:"GK",  age:32, shirt:13,  f:"🇸🇮"},
+  {n:"Julián Álvarez",     club:"Atlético",      lg:"LL", nat:"Argentina",   pos:"ST",  age:25, shirt:19,  f:"🇦🇷"},
+  {n:"Nico Williams",      club:"Athletic Club", lg:"LL", nat:"Spain",       pos:"LW",  age:23, shirt:10,  f:"🇪🇸"},
+  {n:"Iñaki Williams",     club:"Athletic Club", lg:"LL", nat:"Ghana",       pos:"ST",  age:31, shirt:9,   f:"🇬🇭"},
+  {n:"Takefusa Kubo",      club:"Real Sociedad", lg:"LL", nat:"Japan",       pos:"RW",  age:24, shirt:14,  f:"🇯🇵"},
+
+  // BUNDESLIGA ─────────────────────────────────────────────
+  {n:"Harry Kane",         club:"Bayern Munich", lg:"BL", nat:"England",     pos:"ST",  age:32, shirt:9,   f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Florian Wirtz",      club:"Bayern Munich", lg:"BL", nat:"Germany",     pos:"CAM", age:22, shirt:10,  f:"🇩🇪"},
+  {n:"Jamal Musiala",      club:"Bayern Munich", lg:"BL", nat:"Germany",     pos:"CAM", age:22, shirt:42,  f:"🇩🇪"},
+  {n:"Manuel Neuer",       club:"Bayern Munich", lg:"BL", nat:"Germany",     pos:"GK",  age:39, shirt:1,   f:"🇩🇪"},
+  {n:"Kingsley Coman",     club:"Bayern Munich", lg:"BL", nat:"France",      pos:"LW",  age:29, shirt:11,  f:"🇫🇷"},
+  {n:"Christopher Nkunku", club:"Bayern Munich", lg:"BL", nat:"France",      pos:"ST",  age:27, shirt:18,  f:"🇫🇷"},
+  {n:"Jonathan Tah",       club:"Bayern Munich", lg:"BL", nat:"Germany",     pos:"CB",  age:29, shirt:4,   f:"🇩🇪"},
+  {n:"Karim Adeyemi",      club:"Dortmund",      lg:"BL", nat:"Germany",     pos:"LW",  age:23, shirt:27,  f:"🇩🇪"},
+  {n:"Julian Brandt",      club:"Dortmund",      lg:"BL", nat:"Germany",     pos:"CAM", age:29, shirt:19,  f:"🇩🇪"},
+  {n:"Gregor Kobel",       club:"Dortmund",      lg:"BL", nat:"Switzerland", pos:"GK",  age:28, shirt:1,   f:"🇨🇭"},
+  {n:"Xavi Simons",        club:"Leipzig",       lg:"BL", nat:"Netherlands", pos:"CAM", age:22, shirt:10,  f:"🇳🇱"},
+  {n:"Lois Openda",        club:"Leipzig",       lg:"BL", nat:"Belgium",     pos:"ST",  age:25, shirt:27,  f:"🇧🇪"},
+  {n:"Granit Xhaka",       club:"Sunderland",    lg:"PL", nat:"Switzerland", pos:"CDM", age:33, shirt:34,  f:"🇨🇭"},
+  {n:"Alejandro Grimaldo", club:"Leverkusen",    lg:"BL", nat:"Spain",       pos:"LB",  age:30, shirt:12,  f:"🇪🇸"},
+  {n:"Granit Xhaka",       club:"Sunderland",    lg:"PL", nat:"Switzerland", pos:"CDM", age:33, shirt:34,  f:"🇨🇭"},
+  {n:"Serge Gnabry",       club:"Bayern Munich", lg:"BL", nat:"Germany",     pos:"RW",  age:30, shirt:7,   f:"🇩🇪"},
+
+  // SERIE A ────────────────────────────────────────────────
+  {n:"Lautaro Martínez",   club:"Inter Milan",   lg:"SA", nat:"Argentina",   pos:"ST",  age:28, shirt:10,  f:"🇦🇷"},
+  {n:"Marcus Thuram",      club:"Inter Milan",   lg:"SA", nat:"France",      pos:"ST",  age:27, shirt:9,   f:"🇫🇷"},
+  {n:"Nicolò Barella",     club:"Inter Milan",   lg:"SA", nat:"Italy",       pos:"CM",  age:28, shirt:23,  f:"🇮🇹"},
+  {n:"Hakan Çalhanoğlu",   club:"Inter Milan",   lg:"SA", nat:"Turkey",      pos:"CDM", age:31, shirt:20,  f:"🇹🇷"},
+  {n:"Dusan Vlahovic",     club:"Juventus",      lg:"SA", nat:"Serbia",      pos:"ST",  age:25, shirt:9,   f:"🇷🇸"},
+  {n:"Federico Gatti",     club:"Juventus",      lg:"SA", nat:"Italy",       pos:"CB",  age:27, shirt:4,   f:"🇮🇹"},
+  {n:"Kenan Yildiz",       club:"Juventus",      lg:"SA", nat:"Turkey",      pos:"LW",  age:20, shirt:10,  f:"🇹🇷"},
+  {n:"Rafael Leão",        club:"AC Milan",      lg:"SA", nat:"Portugal",    pos:"LW",  age:26, shirt:10,  f:"🇵🇹"},
+  {n:"Theo Hernandez",     club:"AC Milan",      lg:"SA", nat:"France",      pos:"LB",  age:28, shirt:19,  f:"🇫🇷"},
+  {n:"Mike Maignan",       club:"AC Milan",      lg:"SA", nat:"France",      pos:"GK",  age:30, shirt:16,  f:"🇫🇷"},
+  {n:"Ademola Lookman",    club:"Atalanta",      lg:"SA", nat:"Nigeria",     pos:"LW",  age:27, shirt:11,  f:"🇳🇬"},
+  {n:"Gianluca Scamacca",  club:"Atalanta",      lg:"SA", nat:"Italy",       pos:"ST",  age:26, shirt:90,  f:"🇮🇹"},
+  {n:"Matteo Guendouzi",   club:"Lazio",         lg:"SA", nat:"France",      pos:"CM",  age:26, shirt:8,   f:"🇫🇷"},
+
+  // LIGUE 1 ────────────────────────────────────────────────
+  {n:"Bradley Barcola",    club:"PSG",           lg:"L1", nat:"France",      pos:"LW",  age:23, shirt:29,  f:"🇫🇷"},
+  {n:"Ousmane Dembélé",    club:"PSG",           lg:"L1", nat:"France",      pos:"RW",  age:28, shirt:10,  f:"🇫🇷"},
+  {n:"Gianluigi Donnarumma",club:"PSG",          lg:"L1", nat:"Italy",       pos:"GK",  age:27, shirt:99,  f:"🇮🇹"},
+  {n:"Warren Zaïre-Emery", club:"PSG",           lg:"L1", nat:"France",      pos:"CM",  age:19, shirt:33,  f:"🇫🇷"},
+  {n:"Marquinhos",         club:"PSG",           lg:"L1", nat:"Brazil",      pos:"CB",  age:31, shirt:5,   f:"🇧🇷"},
+  {n:"Khvicha Kvaratskhelia",club:"PSG",         lg:"L1", nat:"Georgia",     pos:"LW",  age:24, shirt:7,   f:"🇬🇪"},
+  {n:"Mason Greenwood",    club:"Marseille",     lg:"L1", nat:"England",     pos:"RW",  age:24, shirt:10,  f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Alexandre Lacazette",club:"Lyon",          lg:"L1", nat:"France",      pos:"ST",  age:34, shirt:10,  f:"🇫🇷"},
+];
+
+// Deduplicate by name
+const seen = new Set();
+const PLAYERS = DB.filter(p => { if(seen.has(p.n)) return false; seen.add(p.n); return true; });
+
+// ─── DAILY PUZZLE LOGIC ──────────────────────────────────────
+// Key = YYYY-MM-DD so it ALWAYS refreshes at midnight
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function hashStr(s) {
+  let h = 2166136261;
+  for(let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  return h;
+}
+
+const DATE_KEY = todayKey();
+const PUZZLE_NUM = Math.floor((new Date(DATE_KEY) - new Date('2025-01-01')) / 86400000) + 1;
+const TARGET_IDX = hashStr(DATE_KEY) % PLAYERS.length;
+const TARGET = PLAYERS[TARGET_IDX];
+
+const STORE_KEY = 'kickle_state_' + DATE_KEY;
+const STATS_KEY = 'kickle_stats';
+const MAX = 8;
+
+// ─── STATE ────────────────────────────────────────────────────
+let guesses = [];
+let gameOver = false;
+let dropItems = [];
+let dropSel = -1;
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if(s) { guesses = s.guesses || []; gameOver = s.done || false; }
+  } catch(e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({guesses, done:gameOver})); } catch(e) {}
+}
+
+function loadStats() {
+  try { return JSON.parse(localStorage.getItem(STATS_KEY)) || {p:0,w:0,s:0,b:0,dist:{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0}}; }
+  catch(e) { return {p:0,w:0,s:0,b:0,dist:{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0}}; }
+}
+function saveStats(st) { try { localStorage.setItem(STATS_KEY, JSON.stringify(st)); } catch(e) {} }
+
+// ─── HELPERS ─────────────────────────────────────────────────
+const LEAGUE_FULL = {PL:'Prem',LL:'LaLiga',BL:'Bund.',SA:'Serie A',L1:'Ligue 1'};
+const LEAGUE_COLOR = {PL:'#37003c',LL:'#e8a116',BL:'#d3010c',SA:'#008fd7',L1:'#091c3e'};
+
+function posGroup(p) {
+  if(p==='GK') return 'GK';
+  if(['CB','LB','RB'].includes(p)) return 'DEF';
+  if(['CDM','CM','CAM'].includes(p)) return 'MID';
+  return 'FWD';
+}
+
+function cellClass(val, tgt, type) {
+  if(type==='exact') return val===tgt ? 'correct' : 'wrong';
+  if(type==='num') {
+    if(val===tgt) return 'correct';
+    return Math.abs(val-tgt)<=2 ? 'close' : 'wrong';
+  }
+  if(type==='pos') {
+    if(val===tgt) return 'correct';
+    return posGroup(val)===posGroup(tgt) ? 'close' : 'wrong';
+  }
+  return 'wrong';
+}
+
+function arrow(val, tgt) { return val===tgt ? '' : val<tgt ? ' ↑' : ' ↓'; }
+
+// ─── RENDER ───────────────────────────────────────────────────
+function renderAll() {
+  renderDots();
+  renderRows();
+  document.getElementById('guessUsed').textContent = guesses.length;
+  if(gameOver) {
+    const won = guesses.length && guesses[guesses.length-1].n === TARGET.n;
+    renderResult(won);
+    document.getElementById('searchInput').disabled = true;
+    document.querySelector('.search-btn').disabled = true;
+  }
+}
+
+function renderDots() {
+  const el = document.getElementById('dots');
+  el.innerHTML = '';
+  for(let i=0;i<MAX;i++) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    if(i < guesses.length) {
+      d.className = 'dot ' + (guesses[i].n === TARGET.n ? 'win' : 'used');
+    }
+    el.appendChild(d);
+  }
+}
+
+function renderRows() {
+  const list = document.getElementById('guessList');
+  if(!guesses.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <span class="empty-icon">⚽</span>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:1rem">Type a player name above to start.<br>Puzzle <strong style="color:var(--text)">#${PUZZLE_NUM}</strong> — ${guesses.length} of ${MAX} guesses used.</p>
+        <div class="empty-hint">
+          <div class="eh-head">Player</div><div class="eh-head">Club</div><div class="eh-head">League</div><div class="eh-head">Nation</div>
+          <div class="eh-head">Pos</div><div class="eh-head">Age</div><div class="eh-head">Shirt</div>
+          <div class="eh-cell g">✓</div><div class="eh-cell x">✗</div><div class="eh-cell g">✓</div><div class="eh-cell y">~</div>
+          <div class="eh-cell x">✗</div><div class="eh-cell y">~↑</div><div class="eh-cell x">✗</div>
+        </div>
+      </div>`;
+    return;
+  }
+  list.innerHTML = '';
+  [...guesses].reverse().forEach(g => {
+    const row = document.createElement('div');
+    row.className = 'guess-row';
+    const isWin = g.n === TARGET.n;
+    const cClub = cellClass(g.club, TARGET.club, 'exact');
+    const cLg   = cellClass(g.lg,   TARGET.lg,   'exact');
+    const cNat  = cellClass(g.nat,  TARGET.nat,  'exact');
+    const cPos  = cellClass(g.pos,  TARGET.pos,  'pos');
+    const cAge  = cellClass(g.age,  TARGET.age,  'num');
+    const cShirt= cellClass(g.shirt,TARGET.shirt,'num');
+    const ageA  = cAge  !=='correct' ? `<div class="arrow">${arrow(g.age,TARGET.age)}</div>` : '';
+    const shrtA = cShirt!=='correct' ? `<div class="arrow">${arrow(g.shirt,TARGET.shirt)}</div>` : '';
+    const lgShort = LEAGUE_FULL[g.lg] || g.lg;
+    const clubShort = g.club.replace('Man City','City').replace('Man United','Utd').replace('Bayern Munich','Bayern').replace('Atlético','Atlético').replace('Athletic Club','Athletic');
+    row.innerHTML = `
+      <div class="gc ${isWin?'correct':'wrong'}">
+        <span class="gc-flag">${g.f}</span>
+        <span class="gc-name">${g.n.split(' ').slice(-1)[0]}</span>
+      </div>
+      <div class="gc ${cClub}">${clubShort}</div>
+      <div class="gc ${cLg}">${lgShort}</div>
+      <div class="gc ${cNat}">${g.f}</div>
+      <div class="gc ${cPos}">${g.pos}<div style="font-size:9px;opacity:.7">${posGroup(g.pos)}</div></div>
+      <div class="gc ${cAge}">${g.age}${ageA}</div>
+      <div class="gc ${cShirt}">${g.shirt}${shrtA}</div>`;
+    list.appendChild(row);
+  });
+}
+
+function renderResult(won) {
+  const rw = document.getElementById('resultWrap');
+  rw.style.display = 'block';
+  const guessWord = guesses.length === 1 ? '1 guess' : `${guesses.length} guesses`;
+  // Build mini share grid
+  let grid = '';
+  guesses.forEach(g => {
+    const cells = [
+      g.n===TARGET.n?'g':'x',
+      g.club===TARGET.club?'g':'x',
+      g.lg===TARGET.lg?'g':'x',
+      g.nat===TARGET.nat?'g':'x',
+      g.pos===TARGET.pos?'g':(posGroup(g.pos)===posGroup(TARGET.pos)?'y':'x'),
+      g.age===TARGET.age?'g':(Math.abs(g.age-TARGET.age)<=2?'y':'x'),
+      g.shirt===TARGET.shirt?'g':(Math.abs(g.shirt-TARGET.shirt)<=2?'y':'x'),
+    ];
+    grid += `<div class="sp-row">${cells.map(c=>`<div class="sp-cell ${c}"></div>`).join('')}</div>`;
+  });
+  rw.innerHTML = `
+    <div class="result-card ${won?'':'loss'}">
+      <span class="result-emoji">${won ? (guesses.length<=3?'🔥':guesses.length<=5?'🏆':'✅') : '😔'}</span>
+      <div class="result-title ${won?'win':'loss'}">${won ? (guesses.length===1?'LEGENDARY!':guesses.length<=3?'BRILLIANT!':'NAILED IT!') : 'BETTER LUCK TOMORROW'}</div>
+      <div class="result-sub">${won ? `Solved in ${guessWord}!` : 'The mystery player was...'}</div>
+      <div class="result-player">${TARGET.n}</div>
+      <div class="result-meta">${TARGET.f} ${TARGET.club} &nbsp;·&nbsp; ${TARGET.pos} &nbsp;·&nbsp; ${LEAGUE_FULL[TARGET.lg]||TARGET.lg} &nbsp;·&nbsp; Age ${TARGET.age} &nbsp;·&nbsp; #${TARGET.shirt}</div>
+      <div class="share-preview">${grid}</div>
+      <div class="result-actions">
+        <button class="btn-share" onclick="doShare()">📤 Share Result</button>
+        <button class="btn-stats" onclick="toggleStats()">📊 Stats</button>
+      </div>
+    </div>`;
+}
+
+// ─── SEARCH ───────────────────────────────────────────────────
+function handleSearch(v) {
+  const dd = document.getElementById('dropdown');
+  if(gameOver || v.length < 1) { dd.style.display='none'; return; }
+  const used = new Set(guesses.map(g=>g.n));
+  dropItems = PLAYERS.filter(p=>!used.has(p.n) && p.n.toLowerCase().includes(v.toLowerCase())).slice(0,8);
+  if(!dropItems.length) { dd.style.display='none'; return; }
+  dropSel = -1;
+  dd.style.display = 'block';
+  renderDrop();
+}
+
+function renderDrop() {
+  const dd = document.getElementById('dropdown');
+  dd.innerHTML = dropItems.map((p,i) => `
+    <div class="di ${i===dropSel?'active':''}" onclick="guess(${i})" onmouseover="dropSel=${i};renderDrop()" role="option">
+      <div class="di-avatar">${p.n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+      <div class="di-body">
+        <div class="di-name">${p.n}</div>
+        <div class="di-meta">${p.club} · ${p.pos} · ${LEAGUE_FULL[p.lg]||p.lg} · ${p.nat}</div>
+      </div>
+      <div class="di-flag">${p.f}</div>
+    </div>`).join('');
+}
+
+function handleKey(e) {
+  const dd = document.getElementById('dropdown');
+  if(dd.style.display==='none') { if(e.key==='Enter') submitTop(); return; }
+  if(e.key==='ArrowDown') { dropSel=Math.min(dropSel+1,dropItems.length-1); renderDrop(); e.preventDefault(); }
+  else if(e.key==='ArrowUp') { dropSel=Math.max(dropSel-1,0); renderDrop(); e.preventDefault(); }
+  else if(e.key==='Enter') { if(dropSel>=0) guess(dropSel); else if(dropItems.length) guess(0); e.preventDefault(); }
+  else if(e.key==='Escape') dd.style.display='none';
+}
+
+function submitTop() { if(dropItems.length) guess(dropSel>=0?dropSel:0); }
+
+function guess(idx) {
+  if(gameOver) return;
+  const p = dropItems[idx]; if(!p) return;
+  guesses.push(p);
+  document.getElementById('searchInput').value = '';
+  document.getElementById('dropdown').style.display = 'none';
+  dropItems = []; dropSel = -1;
+  document.getElementById('guessUsed').textContent = guesses.length;
+  renderDots();
+  renderRows();
+  const won = p.n === TARGET.n;
+  const lost = !won && guesses.length >= MAX;
+  if(won || lost) {
+    gameOver = true;
+    const stats = loadStats();
+    stats.p++;
+    if(won) { stats.w++; stats.s++; stats.b=Math.max(stats.b,stats.s); stats.dist[guesses.length]=(stats.dist[guesses.length]||0)+1; }
+    else stats.s = 0;
+    saveStats(stats);
+    if(won) confetti();
+    setTimeout(() => { renderResult(won); document.getElementById('searchInput').disabled=true; document.querySelector('.search-btn').disabled=true; }, won?700:300);
+  }
+  saveState();
+}
+
+// ─── SHARE ────────────────────────────────────────────────────
+function doShare() {
+  const won = guesses.some(g=>g.n===TARGET.n);
+  const score = won ? guesses.length : 'X';
+  const emo = {g:'🟩',y:'🟨',x:'⬛'};
+  let grid = '';
+  guesses.forEach(g => {
+    const r = [
+      g.n===TARGET.n?'g':'x',
+      g.club===TARGET.club?'g':'x',
+      g.lg===TARGET.lg?'g':'x',
+      g.nat===TARGET.nat?'g':'x',
+      g.pos===TARGET.pos?'g':(posGroup(g.pos)===posGroup(TARGET.pos)?'y':'x'),
+      g.age===TARGET.age?'g':(Math.abs(g.age-TARGET.age)<=2?'y':'x'),
+      g.shirt===TARGET.shirt?'g':(Math.abs(g.shirt-TARGET.shirt)<=2?'y':'x'),
+    ];
+    grid += r.map(c=>emo[c]).join('') + '\n';
+  });
+  const text = `⚽ Kickle #${PUZZLE_NUM} — ${score}/${MAX}\n${DATE_KEY}\n\n${grid}\nPlay free at kickle.app`;
+  navigator.clipboard.writeText(text).then(()=>toast('Copied to clipboard! ✓')).catch(()=>toast('Result copied!'));
+}
+
+// ─── COUNTDOWN ────────────────────────────────────────────────
+function updateCountdown() {
+  const now = new Date();
+  const midnight = new Date(now); midnight.setHours(24,0,0,0);
+  const diff = midnight - now;
+  const h = String(Math.floor(diff/3600000)).padStart(2,'0');
+  const m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+  const s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+  document.getElementById('countdown-time').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+// ─── STATS DISPLAY ────────────────────────────────────────────
+function updateStatsUI() {
+  const st = loadStats();
+  ['played','won','streak','best'].forEach((k,i) => {
+    const vals = [st.p,st.w,st.s,st.b];
+    const ids = ['s-played','s-won','s-streak','s-best','ss-played','ss-won','ss-streak','ss-best'];
+    document.getElementById(ids[i]).textContent = vals[i];
+    document.getElementById(ids[i+4]).textContent = vals[i];
+  });
+  const maxDist = Math.max(1, ...Object.values(st.dist||{}));
+  ['distChart','distChart2'].forEach(id => {
+    const el = document.getElementById(id); if(!el) return;
+    el.innerHTML = '';
+    for(let i=1;i<=MAX;i++){
+      const v = st.dist?.[i] || 0;
+      const pct = Math.round(v/maxDist*100);
+      el.innerHTML += `<div class="dist-row">
+        <div class="dist-num">${i}</div>
+        <div class="dist-bar-wrap"><div class="dist-bar" style="width:${pct}%"><span>${v||''}</span></div></div>
+      </div>`;
+    }
+  });
+}
+
+// ─── MODALS ───────────────────────────────────────────────────
+function toggleHelp() {
+  const m = document.getElementById('helpModal');
+  m.classList.toggle('open');
+  updateStatsUI();
+}
+function toggleStats() {
+  const m = document.getElementById('statsModal');
+  m.classList.toggle('open');
+  updateStatsUI();
+}
+document.getElementById('helpBtn').onclick = toggleHelp;
+document.getElementById('statsBtn').onclick = toggleStats;
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+document.addEventListener('keydown', e => { if(e.key==='Escape') document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open')); });
+
+// ─── CONFETTI ─────────────────────────────────────────────────
+function confetti() {
+  const c = document.getElementById('confetti');
+  const cols = ['#22c55e','#facc15','#60a5fa','#f472b6','#fb923c','#a78bfa','#34d399'];
+  for(let i=0;i<100;i++) {
+    const p = document.createElement('div');
+    p.className='cp';
+    p.style.cssText=`left:${Math.random()*100}vw;width:${6+Math.random()*10}px;height:${6+Math.random()*10}px;background:${cols[i%cols.length]};border-radius:${Math.random()>.4?'50%':'2px'};animation-duration:${2+Math.random()*2.5}s;animation-delay:${Math.random()*0.6}s`;
+    c.appendChild(p);
+    setTimeout(()=>p.remove(),5000);
+  }
+}
+
+// ─── TOAST ────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ─── PUZZLE INFO ──────────────────────────────────────────────
+document.getElementById('puzzle-badge').textContent = `Puzzle #${PUZZLE_NUM}`;
+document.getElementById('puzzle-info').innerHTML = `<span>#${PUZZLE_NUM}</span> &nbsp;·&nbsp; ${DATE_KEY}`;
+
+// ─── INIT ─────────────────────────────────────────────────────
+loadState();
+renderAll();
+</script>
+</body>
+</html>
